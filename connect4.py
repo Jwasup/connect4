@@ -210,8 +210,11 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN or currentMove == 'Y':
                 #if its the player's move get the x coordinate of the mouse and convert into which comumn the player is clicking
                 if currentMove == 'R':
+                    validMove = False
                     mouseX, mouseY = pygame.mouse.get_pos()
                     mouseX = trunc(mouseX / 100)
+                    if board[0][mouseX] != '':
+                        continue
                 else:
                     #run the minimax function, print the number of nodes that are explored and the time it took to explore them
                     timeOne = time.time()
@@ -284,6 +287,17 @@ def main():
                             run = False
                             winner = currentMove
                             break
+                
+                #check to see if the board is empty, if not the game is a tie
+                boardFull = True
+                for i in range(6):
+                    for j in range(7):
+                        if board[i][j] != '':
+                            boardFull = False
+                            break
+                    if run == True:
+                        break
+
                 #swap the turn
                 storeMove = currentMove
                 currentMove = nextMove
@@ -292,7 +306,7 @@ def main():
             printBoard(board)
 
     flashBoard(board)
-                    
+
 
 if __name__ == '__main__':
     main()
