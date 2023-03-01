@@ -1,34 +1,3 @@
-"""
-Template Pseudocode
-
-function minimax(node, depth, isMaximizingPlayer, alpha, beta):
-
-    if node is a leaf node :
-        return value of the node
-    
-    if isMaximizingPlayer :
-        bestVal = -INFINITY 
-        for each child node :
-            value = minimax(node, depth+1, false, alpha, beta)
-            bestVal = max( bestVal, value) 
-            alpha = max( alpha, bestVal)
-            if beta <= alpha:
-                break
-        return bestVal
-
-    else :
-        bestVal = +INFINITY 
-        for each child node :
-            value = minimax(node, depth+1, true, alpha, beta)
-            bestVal = min( bestVal, value) 
-            beta = min( beta, bestVal)
-            if beta <= alpha:
-                break
-        return bestVal
-        
-// Calling the function for the first time.
-minimax(0, 0, true, -INFINITY, +INFINITY)
-"""
 import pygame
 import os
 import math
@@ -110,7 +79,7 @@ def printBoard(board):
                 WIN.blit(yellowX, (100 * j, 100 * i))
     pygame.display.update()
 
-def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMoveY, nextMove, currentMove):
+def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMoveY, currentMove, nextMove):
     #increment the node counter by one, this is printed after every ai generated move for now for testing purposes
     global nodes
     nodes += 1
@@ -132,13 +101,32 @@ def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevM
                 continue
             #calculate the value of the new board
             value = miniMax(board, depth + 1, maxDepth, False, alpha, beta, i, prevMoveY, nextMove, currentMove)
-            print(value)
+            print(f"{value} ",end="")
             #restore the board to how it was before checking the move
             board[prevMoveY][i] = ''
 
             #update bestVal and alpha
             if value > bestVal:
                 bestMove = i
+            if value == bestVal:
+                if i == 3:
+                    bestMove = i
+                elif i == 2:
+                    bestMove = i
+                elif i == 4 and bestMove == 2:
+                    if random() > .5:
+                        bestMove = i
+                elif i == 1:
+                    bestMove = i
+                elif i == 5 and bestMove == 1:
+                    if random() > .5:
+                        bestMove = i
+                elif i == 0:
+                    bestMove = i
+                elif i == 6 and bestMove == 0:
+                    if random() > .5:
+                        bestMove = i
+
             bestVal = max(bestVal, value)
             alpha = max(alpha, bestVal)
             if beta <= alpha:
@@ -146,7 +134,8 @@ def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevM
 
         return bestMove
     else :
-        print("This code actually ran?")
+        for i in range(10):
+            print("This code actually ran????")
         bestVal = 1000
         bestMove = ''
         for i in range(7):
@@ -170,6 +159,9 @@ def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevM
             #update bestVal and alpha
             if value < bestVal:
                 bestMove = i
+            if value == bestVal:
+                if i == 3:
+                    bestMove = i
             bestVal = min(bestVal, value) 
             beta = min(beta, bestVal)
             if beta <= alpha:
@@ -177,17 +169,19 @@ def bestMove(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevM
 
         return bestMove
 
-def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMoveY, nextMove, currentMove):
+def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMoveY, currentMove, nextMove):
     #increment the node counter by one, this is printed after every ai generated move for now for testing purposes
     global nodes
     nodes += 1
 
+    global cutBranches
+
     try:
         if board[prevMoveY + 1][prevMoveX] == board[prevMoveY + 2][prevMoveX] == board[prevMoveY + 3][prevMoveX] == nextMove:
             if isMaximizing:
-                return 1
+                return -(maxDepth - depth + 1)
             else:
-                return -1
+                return depth
     except:
         pass
 
@@ -204,9 +198,9 @@ def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMo
 
             if counter >= 4:
                 if isMaximizing:
-                    return 1
+                    return -(maxDepth - depth + 1)
                 else:
-                    return -1
+                    return depth
     
     counter = 0
     for i in range(7):
@@ -218,9 +212,9 @@ def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMo
 
             if counter >= 4:
                 if isMaximizing:
-                    return 1
+                    return -(maxDepth - depth + 1)
                 else:
-                    return -1
+                    return depth
 
     counter = 0
     for i in range(7):
@@ -232,16 +226,16 @@ def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMo
 
             if counter >= 4:
                 if isMaximizing:
-                    return 1
+                    return -(maxDepth - depth + 1)
                 else:
-                    return -1
+                    return depth
     
-    #base case, prevents excessive recursion.  Every increase to max depth roughly 7x processing speed
+    #base case, prevents excessive recursion.  Every increase to max depth roughly 7x processing required
     if depth >= maxDepth:
         return 0
     
     if isMaximizing:
-        bestVal = -1000
+        value = -1000
         for i in range(7):
             #place said piece
             spaceFound = False
@@ -255,22 +249,23 @@ def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMo
             if spaceFound == False:
                 continue
             #calculate the value of the new board
-            value = miniMax(board, depth + 1, maxDepth, False, alpha, beta, i, prevMoveY, nextMove, currentMove)
+            value = max(value, miniMax(board, depth + 1, maxDepth, False, alpha, beta, i, prevMoveY, nextMove, currentMove))
 
             #restore the board to how it was before checking the move
             board[prevMoveY][i] = ''
 
             #update bestVal and alpha
-            bestVal = max( bestVal, value)
-            alpha = max( alpha, bestVal)
-            if beta <= alpha:
+            if value > beta:
+                cutBranches += 1
                 break
-        if bestVal > -1000:
-            return bestVal
+            alpha = max(alpha, value)
+
+        if value > -1000:
+            return value
         else:
             return 0
     else :
-        bestVal = 1000
+        value = 1000
         for i in range(7):
             #place said piece
             spaceFound = False
@@ -284,19 +279,19 @@ def miniMax(board, depth, maxDepth, isMaximizing, alpha, beta, prevMoveX, prevMo
             if spaceFound == False:
                 continue
             #calculate the value of the new board
-            value = miniMax(board, depth + 1, maxDepth, True, alpha, beta, i, prevMoveY, nextMove, currentMove)
+            value = min(value, miniMax(board, depth + 1, maxDepth, True, alpha, beta, i, prevMoveY, nextMove, currentMove))
 
             #restore the board to how it was before checking the move
             board[prevMoveY][i] = ''
 
             #update bestVal and alpha
-            bestVal = min( bestVal, value) 
-            beta = min( beta, bestVal)
-            if beta <= alpha:
+            if value < alpha:
+                cutBranches += 1
                 break
+            beta = min(beta, value)
 
-        if bestVal < 1000:
-            return bestVal
+        if value < 1000:
+            return value
         else:
             return 0
         
@@ -331,15 +326,27 @@ def main():
                     timeOne = time.time()
                     global nodes
                     nodes = 0
-                    maxDepth = 6
+                    global cutBranches
+                    cutBranches = 0
+                    depthAdditive = 0
                     for i in range(7):
                         if board[0][i] != '':
-                            maxDepth += 1
+                            depthAdditive += 1
+                    if depthAdditive == 0:
+                        maxDepth = 6
+                    elif depthAdditive == 1:
+                        maxDepth = 7
+                    elif depthAdditive == 2:
+                        maxDepth = 8
+                    elif depthAdditive == 3:
+                        maxDepth = 11
+                    elif depthAdditive == 4:
+                        maxDepth = 18
                     mouseX = bestMove(board, 0, maxDepth, True, -1000, 1000, 0, 0, currentMove, nextMove)
-                    print(f"{nodes} Nodes Searched in ",end='')
+                    print(f"\n{nodes} Nodes ({cutBranches} Branches Cut) Searched in ",end='')
                     timeTwo = time.time()
                     timeDiff = round(1000 * (timeTwo - timeOne))
-                    print(f"{timeDiff} Miliseconds")
+                    print(f"{timeDiff} Miliseconds At A Depth Of {maxDepth}")
                 #place the piece in the appropriate location, in the lowest available slot in the correct column
                 for i in range(6):
                     if board[5 - i][mouseX] == '':
@@ -353,6 +360,7 @@ def main():
                         run = False
                         winner = currentMove
                         board[mouseY][mouseX] = board[mouseY + 1][mouseX] = board[mouseY + 2][mouseX] = board[mouseY + 3][mouseX] = currentMove.lower()
+                        break
                 except:
                     pass
                 #each of these 3 blocks check for a different type of connect 4, -, \, and / respectively.
@@ -405,18 +413,20 @@ def main():
                 
                 #check to see if the board is empty, if not the game is a tie
                 boardFull = True
-                for i in range(6):
-                    for j in range(7):
-                        if board[i][j] != '':
-                            boardFull = False
-                            break
-                    if run == True:
+                for i in range(7):
+                    if board[0][i] == '':
+                        boardFull = False
                         break
+                if boardFull == True:
+                    run = False
 
                 #swap the turn
                 storeMove = currentMove
                 currentMove = nextMove
                 nextMove = storeMove
+
+                if run == False:
+                    break
             #print the board
             printBoard(board)
 
